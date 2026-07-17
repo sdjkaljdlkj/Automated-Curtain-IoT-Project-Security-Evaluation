@@ -8,6 +8,8 @@ import threading
 
 app = Flask(__name__)
 
+mode = "AUTO"
+
 def scheduler():
     last_data_fetch_time = None
 
@@ -20,17 +22,17 @@ def scheduler():
             sunrise_time = datetime.fromisoformat(data['sunrise'])
             sunset_time = datetime.fromisoformat(data['sunset'])
 
-        current_time = datetime.now(sunrise_time.tzinfo)
-
-        if current_time >= sunrise_time and current_time < sunset_time:
-            open_curtain()
-        else:
-            close_curtain()
+        if mode == "AUTO":
+            current_time = datetime.now(sunrise_time.tzinfo)
+            if current_time >= sunrise_time and current_time < sunset_time:
+                open_curtain()
+            else:
+                close_curtain()
         time.sleep(120)
 
 @app.route("/")
 def home_page():
-    return """
+    html = """
     <!DOCTYPE html>
     <html>
     <head>
@@ -95,30 +97,51 @@ def home_page():
         <div class="background_card">
             <h1>Welcome to the Curtain Control Server</h1>
             <p>Click on the following buttons to control the curtains:</p>
+            <p>Current Mode: placeholder</p>
             <div class= "buttons">
                 <a href="/open"><button class="open">Open Curtain</button></a>
                 <a href="/close"><button class="close">Close Curtain</button></a>
                 <a href="/stop"><button class="stop">Stop Curtain</button></a>
+                <a href="/auto"><button>Return to Automatic Mode</button></a>
             </div>
         </div>
     </body>
     </html>
     """
+    return html.replace("placeholder", mode)
 
 @app.route("/open")
 def open_curtain_route():
+    global mode
+    mode = "MANUAL"
     open_curtain()
     return redirect("/")
 
 @app.route("/close")
 def close_curtain_route():
+    global mode
+    mode = "MANUAL"
     close_curtain()
     return redirect("/")
 
 
 @app.route("/stop")
 def stop_curtain_route():
+    global mode
+    mode = "MANUAL"
     stop_curtain()
+    return redirect("/")
+
+@app.route("/auto")
+def auto_mode():
+    global mode
+    mode = "AUTO"
+    return redirect("/")
+
+@app.route("/manual")
+def manual_mode():
+    global mode
+    mode = "MANUAL"
     return redirect("/")
 
 if __name__ == "__main__":
